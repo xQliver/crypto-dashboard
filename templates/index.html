@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+    <title>Crypto dashboard</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css" rel="stylesheet" />
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <style>
+        body {
+            width: 640px;
+            height: 480px;
+            margin: 0 auto;
+            overflow: hidden;
+            /* Disable scrollbars */
+            background-image: url('static/background.jpg');
+            background-repeat: no-repeat;
+            background-size: 640px 480px;
+        }
+
+        .small-header {
+            color: white;
+            font-size: 3em;
+        }
+
+        .positive {
+            color: green;
+        }
+
+        .negative {
+            color: red;
+        }
+
+        p {
+            color: white;
+            font-size: 2em;
+        }
+    </style>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script>
+        function updateBitcoinData() {
+            $.getJSON('/bitcoin', function (data) {
+                $('#btc_price').text(data.bitcoin.usd);
+
+                let change = data.bitcoin.usd_24h_change.toFixed(2) + "%";
+                $('#btc_24hr_change').text(change);
+
+                // Check the change value and apply appropriate class
+                if (data.bitcoin.usd_24h_change > 0) {
+                    $('#btc_24hr_change').addClass('positive');
+                } else if (data.bitcoin.usd_24h_change < 0) {
+                    $('#btc_24hr_change').addClass('negative');
+                }
+
+                setTimeout(updateBitcoinData, 60000); // repeat every 60 seconds
+            }).fail(function () {
+                setTimeout(updateBitcoinData, 60000); // even on failure, repeat after 60 seconds
+            });
+        }
+        function updateBitcoinGasData() {
+            $.getJSON('/bitcoin_gas', function (data) {
+                var roundedFee = Math.round(data[0].medianFee);
+                $('#btc_gas').text(roundedFee);
+                setTimeout(updateBitcoinGasData, 60000); // repeat every 60 seconds
+            }).fail(function () {
+                setTimeout(updateBitcoinGasData, 60000); // even on failure, repeat after 60 seconds
+            });
+        }
+        function updateEthereumData() {
+            $.getJSON('/ethereum', function (data) {
+                var roundedEthPrice = Math.round(data.ethereum.usd);
+                $('#eth_price').text(roundedEthPrice);
+
+                let change = data.ethereum.usd_24h_change.toFixed(2) + "%";
+                $('#eth_24hr_change').text(change);
+
+                // Check the change value and apply appropriate class
+                if (data.ethereum.usd_24h_change > 0) {
+                    $('#eth_24hr_change').addClass('positive');
+                } else if (data.ethereum.usd_24h_change < 0) {
+                    $('#eth_24hr_change').addClass('negative');
+                }
+
+                setTimeout(updateEthereumData, 60000); // repeat every 60 seconds
+            }).fail(function () {
+                setTimeout(updateEthereumData, 60000); // even on failure, repeat after 60 seconds
+            });
+        }
+        function updateEthereumGasData() {
+            $.getJSON('/ethereum_gas', function (data) {
+                $('#eth_gas').text(data.result.ProposeGasPrice);
+                setTimeout(updateEthereumGasData, 60000); // repeat every 60 seconds
+            }).fail(function () {
+                setTimeout(updateEthereumGasData, 60000); // even on failure, repeat after 60 seconds
+            });
+        }
+        function updateFearGreedData() {
+            $.getJSON('/fear_greed', function (data) {
+                // Extracting the value from the latest index data
+                $('#fear_greed').text(data.data[0].value);
+
+                let value = parseInt(document.getElementById('fear_greed').innerText);  // Get the current value
+                document.getElementById('fear_greed').style.color = getColorForValue(value);  // Set the color based on the value
+
+                setTimeout(updateFearGreedData, 600000); // repeat every hour
+            }).fail(function () {
+                setTimeout(updateFearGreedData, 600000); // even on failure, repeat after one hour
+            });
+        }
+
+        $(document).ready(function () {
+            updateBitcoinData(); // initial call, starts the cycle
+            updateBitcoinGasData(); // initial call for Bitcoin gas data
+            updateEthereumData();
+            updateEthereumGasData(); // initial call for Ethereum gas data
+            updateFearGreedData(); // initial call for Fear and Greed data
+        });
+    </script>
+</head>
+
+<body style="display: flex; justify-content: center; align-items: center; margin: 0; overflow: hidden;">
+    <div style="
+    background-color: rgba(22, 25, 42, 1.0);
+    padding: 2em;
+    border-radius: 5px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 90%;
+	height: 90%;
+    max-width: 640px;
+    max-height: 480px;
+    margin: 0 auto;
+">
+        <div id="content-container"
+            style="display: flex; justify-content: center; align-items: center; height: 100vh; width: 100vw;">
+            <div
+                style="width: 640px; height: 480px; overflow: hidden; position: relative; background-size: 640px 480px;">
+                <!-- Create 3 areas, top right, top left, bottom -->
+                <div class="container-fluid">
+                    <div class="container-fluid">
+                        <!-- This is the new wrapping row for centering -->
+                        <div class="row justify-content-center">
+                            <div class="col-sm-5 mx-sm-1 d-flex justify-content-center flex-column align-items-center"
+                                style="margin-top:7%; border-radius: 5px; padding: 5px; background-color: rgba(31, 38, 60, 1.0);">
+                                <h1 class="small-header">Bitcoin</h1>
+                                <p>$<span id="btc_price"></span> <span id="btc_24hr_change"></span></p>
+                                <p><span id="btc_gas"></span> sat/vB</p>
+                            </div>
+
+                            <div class="col-sm-5 mx-sm-2 d-flex justify-content-center flex-column align-items-center"
+                                style="margin-top: 7%; border-radius: 5px; padding: 5px; background-color: rgba(31, 38, 60, 1.0);">
+                                <h1 class="small-header">Ethereum</h1>
+                                <p>$<span id="eth_price"></span> <span id="eth_24hr_change"></span></p>
+                                <p><span id="eth_gas"></span> gwei</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-sm-6 offset-sm-3 d-flex justify-content-center flex-column justify-content-center align-items-center"
+                            style="margin-top: 2%; border-radius: 5px; padding: 5px; width: 80%; height: 180px; background-color: rgba(31, 38, 60, 1.0);">
+                            <h1 class="small-header">Fear &amp; greed</h1>
+                            <p><span id="fear_greed"></span></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function getColorForValue(value) {
+            let red, green, blue = 0;
+
+            // If the value is between 0 and 50
+            if (value <= 50) {
+                red = 255;
+                green = Math.floor(255 * (value / 50));
+            }
+            // If the value is between 51 and 100
+            else {
+                green = 255;
+                red = 255 - Math.floor(255 * ((value - 50) / 50));
+            }
+
+            return 'rgb(' + red + ',' + green + ',' + blue + ')';
+        }
+
+        // Assuming the value of the Fear & Greed index is set somewhere in your existing code
+        // Here's how you can apply the color:
+        let value = parseInt(document.getElementById('fear_greed').innerText);  // Get the current value
+        document.getElementById('fear_greed').style.color = getColorForValue(value);  // Set the color based on the value
+    </script>
+
+</body>
+
+</html>
