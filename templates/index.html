@@ -6,6 +6,7 @@
     <title>Crypto dashboard</title>
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css" rel="stylesheet" />
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         body {
             width: 640px;
@@ -20,7 +21,7 @@
 
         .small-header {
             color: white;
-            font-size: 3em;
+            font-size: 2em;
         }
 
         .positive {
@@ -38,29 +39,47 @@
     </style>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
     <script>
+        let apiValues_btc = [0, 0, 0, 0, 0, 0];  // Placeholder data
+        let apiValues_eth = [0, 0, 0, 0, 0, 0];  // Placeholder data
+
         function updateBitcoinData() {
             $.getJSON('/bitcoin', function (data) {
                 $('#btc_price').text(data.bitcoin.usd);
 
+                // Initialize the change string with the rounded value and a "%" sign
                 let change = data.bitcoin.usd_24h_change.toFixed(2) + "%";
-                $('#btc_24hr_change').text(change);
 
-                // Check the change value and apply appropriate class
+                // Check the change value and apply appropriate class and sign
                 if (data.bitcoin.usd_24h_change > 0) {
                     $('#btc_24hr_change').addClass('positive');
+                    change = "+" + change; // prepend the '+' sign for positive change
                 } else if (data.bitcoin.usd_24h_change < 0) {
                     $('#btc_24hr_change').addClass('negative');
                 }
+
+                // Now set the text with the appropriate sign
+                $('#btc_24hr_change').text(change);
 
                 setTimeout(updateBitcoinData, 60000); // repeat every 60 seconds
             }).fail(function () {
                 setTimeout(updateBitcoinData, 60000); // even on failure, repeat after 60 seconds
             });
         }
+
         function updateBitcoinGasData() {
             $.getJSON('/bitcoin_gas', function (data) {
                 var roundedFee = Math.round(data[0].medianFee);
                 $('#btc_gas').text(roundedFee);
+
+                // Update the apiValues_btc array
+                apiValues_btc.push(roundedFee);
+                if (apiValues_btc.length > 6) {
+                    apiValues_btc.shift();  // remove the oldest data point if there are more than 6 points
+                }
+
+                // Update the chart
+                chart_btc.update();
+
                 setTimeout(updateBitcoinGasData, 60000); // repeat every 60 seconds
             }).fail(function () {
                 setTimeout(updateBitcoinGasData, 60000); // even on failure, repeat after 60 seconds
@@ -71,15 +90,19 @@
                 var roundedEthPrice = Math.round(data.ethereum.usd);
                 $('#eth_price').text(roundedEthPrice);
 
+                // Initialize the change string with the rounded value and a "%" sign
                 let change = data.ethereum.usd_24h_change.toFixed(2) + "%";
-                $('#eth_24hr_change').text(change);
 
-                // Check the change value and apply appropriate class
+                // Check the change value and apply appropriate class and sign
                 if (data.ethereum.usd_24h_change > 0) {
                     $('#eth_24hr_change').addClass('positive');
+                    change = "+" + change; // prepend the '+' sign for positive change
                 } else if (data.ethereum.usd_24h_change < 0) {
                     $('#eth_24hr_change').addClass('negative');
                 }
+
+                // Now set the text with the appropriate sign
+                $('#eth_24hr_change').text(change);
 
                 setTimeout(updateEthereumData, 60000); // repeat every 60 seconds
             }).fail(function () {
@@ -89,6 +112,16 @@
         function updateEthereumGasData() {
             $.getJSON('/ethereum_gas', function (data) {
                 $('#eth_gas').text(data.result.ProposeGasPrice);
+
+                // Update the apiValues_eth array
+                apiValues_eth.push(data.result.ProposeGasPrice);
+                if (apiValues_eth.length > 6) {
+                    apiValues_eth.shift();  // remove the oldest data point if there are more than 6 points
+                }
+
+                // Update the chart
+                chart_eth.update();
+
                 setTimeout(updateEthereumGasData, 60000); // repeat every 60 seconds
             }).fail(function () {
                 setTimeout(updateEthereumGasData, 60000); // even on failure, repeat after 60 seconds
@@ -147,6 +180,7 @@
                                 <h1 class="small-header">Bitcoin</h1>
                                 <p>$<span id="btc_price"></span> <span id="btc_24hr_change"></span></p>
                                 <p><span id="btc_gas"></span> sat/vB</p>
+                                <canvas id="btc_gas_chart" width="50" height="20"></canvas>
                             </div>
 
                             <div class="col-sm-5 mx-sm-2 d-flex justify-content-center flex-column align-items-center"
@@ -154,6 +188,7 @@
                                 <h1 class="small-header">Ethereum</h1>
                                 <p>$<span id="eth_price"></span> <span id="eth_24hr_change"></span></p>
                                 <p><span id="eth_gas"></span> gwei</p>
+                                <canvas id="eth_gas_chart" width="50" height="20"></canvas>
                             </div>
                         </div>
                     </div>
@@ -191,6 +226,83 @@
         // Here's how you can apply the color:
         let value = parseInt(document.getElementById('fear_greed').innerText);  // Get the current value
         document.getElementById('fear_greed').style.color = getColorForValue(value);  // Set the color based on the value
+    </script>
+
+    <!-- Global script defining the function -->
+    <script>
+        function generateTimeLabels() {
+            const now = new Date();
+            const labels = [];
+            for (let i = 5; i >= 0; i--) {
+                const pastTime = new Date(now.getTime() - i * 10 * 60 * 1000);
+                labels.push(`${pastTime.getHours().toString().padStart(2, '0')}:${pastTime.getMinutes().toString().padStart(2, '0')}`);
+            }
+            return labels;
+        }
+    </script>
+
+    <script>
+
+        const timeLabels = generateTimeLabels();
+
+        const ctx_btc = document.getElementById('btc_gas_chart').getContext('2d');
+        const chart_btc = new Chart(ctx_btc, {
+            type: 'line',
+            data: {
+                labels: timeLabels,
+                datasets: [{
+                    label: '', // Clearing the label
+                    data: apiValues_btc,
+                    borderColor: 'rgba(75, 192, 192, 1)',
+                    fill: false
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        display: false // Hiding the legend
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+    </script>
+
+    <script>
+
+        const timeLabels_eth = generateTimeLabels();
+
+        const ctx_eth = document.getElementById('eth_gas_chart').getContext('2d');
+        const chart_eth = new Chart(ctx_eth, {
+            type: 'line',
+            data: {
+                labels: timeLabels_eth,
+                datasets: [{
+                    label: '', // Clearing the label
+                    data: apiValues_eth,
+                    borderColor: 'rgba(75, 192, 192, 1)',
+                    fill: false
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        display: false // Hiding the legend
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
     </script>
 
 </body>
