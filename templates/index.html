@@ -60,9 +60,9 @@
                 // Now set the text with the appropriate sign
                 $('#btc_24hr_change').text(change);
 
-                setTimeout(updateBitcoinData, 60000); // repeat every 60 seconds
+                setTimeout(updateBitcoinData, 600000); // repeat every 10 minutes
             }).fail(function () {
-                setTimeout(updateBitcoinData, 60000); // even on failure, repeat after 60 seconds
+                setTimeout(updateBitcoinData, 600000); // even on failure, repeat after 10 minutes
             });
         }
 
@@ -80,9 +80,9 @@
                 // Update the chart
                 chart_btc.update();
 
-                setTimeout(updateBitcoinGasData, 60000); // repeat every 60 seconds
+                setTimeout(updateBitcoinGasData, 600000); // repeat every 10 minutes
             }).fail(function () {
-                setTimeout(updateBitcoinGasData, 60000); // even on failure, repeat after 60 seconds
+                setTimeout(updateBitcoinGasData, 600000); // even on failure, repeat after 10 minutes
             });
         }
         function updateEthereumData() {
@@ -104,9 +104,9 @@
                 // Now set the text with the appropriate sign
                 $('#eth_24hr_change').text(change);
 
-                setTimeout(updateEthereumData, 60000); // repeat every 60 seconds
+                setTimeout(updateEthereumData, 600000); // repeat every 10 minutes
             }).fail(function () {
-                setTimeout(updateEthereumData, 60000); // even on failure, repeat after 60 seconds
+                setTimeout(updateEthereumData, 600000); // even on failure, repeat after 10 minutes
             });
         }
         function updateEthereumGasData() {
@@ -122,9 +122,9 @@
                 // Update the chart
                 chart_eth.update();
 
-                setTimeout(updateEthereumGasData, 60000); // repeat every 60 seconds
+                setTimeout(updateEthereumGasData, 600000); // repeat every 10 minutes
             }).fail(function () {
-                setTimeout(updateEthereumGasData, 60000); // even on failure, repeat after 60 seconds
+                setTimeout(updateEthereumGasData, 600000); // even on failure, repeat after 10 minutes
             });
         }
         function updateFearGreedData() {
@@ -135,16 +135,16 @@
                 let value = parseInt(document.getElementById('fear_greed').innerText);  // Get the current value
                 document.getElementById('fear_greed').style.color = getColorForValue(value);  // Set the color based on the value
 
-                setTimeout(updateFearGreedData, 600000); // repeat every hour
+                setTimeout(updateFearGreedData, 18000000); // repeat every three hours
             }).fail(function () {
-                setTimeout(updateFearGreedData, 600000); // even on failure, repeat after one hour
+                setTimeout(updateFearGreedData, 18000000); // even on failure, repeat after three hours
             });
         }
 
         $(document).ready(function () {
-            updateBitcoinData(); // initial call, starts the cycle
+            updateBitcoinData(); // initial call for Bitcoin price data
             updateBitcoinGasData(); // initial call for Bitcoin gas data
-            updateEthereumData();
+            updateEthereumData(); // initial call for Ethereum price data
             updateEthereumGasData(); // initial call for Ethereum gas data
             updateFearGreedData(); // initial call for Fear and Greed data
         });
@@ -180,7 +180,7 @@
                                 <h1 class="small-header">Bitcoin</h1>
                                 <p>$<span id="btc_price"></span> <span id="btc_24hr_change"></span></p>
                                 <p><span id="btc_gas"></span> sat/vB</p>
-                                <canvas id="btc_gas_chart" width="50" height="20"></canvas>
+                                <canvas id="btc_gas_chart" width="50" height="15"></canvas>
                             </div>
 
                             <div class="col-sm-5 mx-sm-2 d-flex justify-content-center flex-column align-items-center"
@@ -188,7 +188,7 @@
                                 <h1 class="small-header">Ethereum</h1>
                                 <p>$<span id="eth_price"></span> <span id="eth_24hr_change"></span></p>
                                 <p><span id="eth_gas"></span> gwei</p>
-                                <canvas id="eth_gas_chart" width="50" height="20"></canvas>
+                                <canvas id="eth_gas_chart" width="50" height="15"></canvas>
                             </div>
                         </div>
                     </div>
