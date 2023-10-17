@@ -6,7 +6,8 @@
     <title>Crypto dashboard</title>
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css" rel="stylesheet" />
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
     <style>
         body {
             width: 640px;
@@ -25,16 +26,25 @@
         }
 
         .positive {
-            color: green;
+            color: rgb(79, 255, 79);
         }
 
         .negative {
-            color: red;
+            color: rgb(255, 0, 0);
+        }
+
+        .price-text {
+            color: white;
+            font-size: 1.25em;
+        }
+
+        .price-change-text {
+            font-size: 0.75em;
         }
 
         p {
             color: white;
-            font-size: 2em;
+            font-size: 1.5em;
         }
     </style>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
@@ -42,12 +52,16 @@
         let apiValues_btc = [0, 0, 0, 0, 0, 0];  // Placeholder data
         let apiValues_eth = [0, 0, 0, 0, 0, 0];  // Placeholder data
 
+        function formatNumberWithCommas(x) {
+            return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+        }
+
         function updateBitcoinData() {
             $.getJSON('/bitcoin', function (data) {
-                $('#btc_price').text(data.bitcoin.usd);
+                $('#btc_price').text(formatNumberWithCommas(data.bitcoin.usd));
 
                 // Initialize the change string with the rounded value and a "%" sign
-                let change = data.bitcoin.usd_24h_change.toFixed(2) + "%";
+                let change = data.bitcoin.usd_24h_change.toFixed(2) + "%)";
 
                 // Check the change value and apply appropriate class and sign
                 if (data.bitcoin.usd_24h_change > 0) {
@@ -56,6 +70,7 @@
                 } else if (data.bitcoin.usd_24h_change < 0) {
                     $('#btc_24hr_change').addClass('negative');
                 }
+                change = "(" + change; // prepend the '(' sign
 
                 // Now set the text with the appropriate sign
                 $('#btc_24hr_change').text(change);
@@ -88,10 +103,10 @@
         function updateEthereumData() {
             $.getJSON('/ethereum', function (data) {
                 var roundedEthPrice = Math.round(data.ethereum.usd);
-                $('#eth_price').text(roundedEthPrice);
+                $('#eth_price').text(formatNumberWithCommas(roundedEthPrice));
 
                 // Initialize the change string with the rounded value and a "%" sign
-                let change = data.ethereum.usd_24h_change.toFixed(2) + "%";
+                let change = data.ethereum.usd_24h_change.toFixed(2) + "%)";
 
                 // Check the change value and apply appropriate class and sign
                 if (data.ethereum.usd_24h_change > 0) {
@@ -100,6 +115,7 @@
                 } else if (data.ethereum.usd_24h_change < 0) {
                     $('#eth_24hr_change').addClass('negative');
                 }
+                change = "(" + change; // prepend the '(' sign
 
                 // Now set the text with the appropriate sign
                 $('#eth_24hr_change').text(change);
@@ -178,25 +194,27 @@
                             <div class="col-sm-5 mx-sm-1 d-flex justify-content-center flex-column align-items-center"
                                 style="margin-top:7%; border-radius: 5px; padding: 5px; background-color: rgba(31, 38, 60, 1.0);">
                                 <h1 class="small-header">Bitcoin</h1>
-                                <p>$<span id="btc_price"></span> <span id="btc_24hr_change"></span></p>
-                                <p><span id="btc_gas"></span> sat/vB</p>
-                                <canvas id="btc_gas_chart" width="50" height="15"></canvas>
+                                <p><span class="price-text">$</span><span class="price-text" id="btc_price"></span>
+                                    <span class="price-change-text" id="btc_24hr_change"></span>
+                                </p>
+                                <canvas id="btc_gas_chart" width="50" height="25"></canvas>
                             </div>
 
                             <div class="col-sm-5 mx-sm-2 d-flex justify-content-center flex-column align-items-center"
                                 style="margin-top: 7%; border-radius: 5px; padding: 5px; background-color: rgba(31, 38, 60, 1.0);">
                                 <h1 class="small-header">Ethereum</h1>
-                                <p>$<span id="eth_price"></span> <span id="eth_24hr_change"></span></p>
-                                <p><span id="eth_gas"></span> gwei</p>
-                                <canvas id="eth_gas_chart" width="50" height="15"></canvas>
+                                <p><span class="price-text">$</span><span class="price-text" id="eth_price"></span>
+                                    <span class="price-change-text" id="eth_24hr_change"></span>
+                                </p>
+                                <canvas id="eth_gas_chart" width="50" height="25"></canvas>
                             </div>
                         </div>
                     </div>
                     <div class="row">
                         <div class="col-sm-6 offset-sm-3 d-flex justify-content-center flex-column justify-content-center align-items-center"
-                            style="margin-top: 2%; border-radius: 5px; padding: 5px; width: 80%; height: 180px; background-color: rgba(31, 38, 60, 1.0);">
-                            <h1 class="small-header">Fear &amp; greed</h1>
-                            <p><span id="fear_greed"></span></p>
+                            style="margin-top: 2%; border-radius: 5px; padding: 5px; width: 80%; height: 145px; background-color: rgba(31, 38, 60, 1.0);">
+                            <h1 class="small-header">Fear &amp; Greed</h1>
+                            <p><span class="price-change-text id="fear_greed"></span></p>
                         </div>
                     </div>
                 </div>
@@ -222,13 +240,11 @@
             return 'rgb(' + red + ',' + green + ',' + blue + ')';
         }
 
-        // Assuming the value of the Fear & Greed index is set somewhere in your existing code
-        // Here's how you can apply the color:
         let value = parseInt(document.getElementById('fear_greed').innerText);  // Get the current value
         document.getElementById('fear_greed').style.color = getColorForValue(value);  // Set the color based on the value
     </script>
 
-    <!-- Global script defining the function -->
+    <!-- Global script defining the time labels -->
     <script>
         function generateTimeLabels() {
             const now = new Date();
@@ -251,22 +267,54 @@
             data: {
                 labels: timeLabels,
                 datasets: [{
-                    label: '', // Clearing the label
+                    label: 'sat/vB',
                     data: apiValues_btc,
-                    borderColor: 'rgba(75, 192, 192, 1)',
-                    fill: false
+                    backgroundColor: 'rgba(49, 97, 252, 0.25)',
+                    borderColor: 'rgba(49, 97, 252, 1)',
+                    fill: true,
+                    datalabels: {
+                        display: true,
+                        align: 'top',
+                        color: '#fff',
+                        formatter: (value) => value
+                    }
                 }]
             },
+            plugins: [ChartDataLabels],
             options: {
                 responsive: true,
                 plugins: {
+                    datalabels: {
+                        display: true,
+                        align: 'top',
+                        color: '#fff',
+                        formatter: (value) => value
+                    },
                     legend: {
-                        display: false // Hiding the legend
+                        labels: {
+                            pointStyle: 'line',
+                            usePointStyle: true,
+                            color: '#FFFFFF'  // Legend text color
+                        }
                     }
                 },
                 scales: {
+                    x: {
+                        grid: {
+                            display: false  // Hide grid lines
+                        },
+                        ticks: {
+                            color: '#FFFFFF'  // X axis label color
+                        }
+                    },
                     y: {
-                        beginAtZero: true
+                        beginAtZero: true,
+                        grid: {
+                            display: false  // Hide grid lines
+                        },
+                        ticks: {
+                            color: '#FFFFFF'  // Y axis label color
+                        }
                     }
                 }
             }
@@ -283,22 +331,54 @@
             data: {
                 labels: timeLabels_eth,
                 datasets: [{
-                    label: '', // Clearing the label
+                    label: 'gwei',
                     data: apiValues_eth,
-                    borderColor: 'rgba(75, 192, 192, 1)',
-                    fill: false
+                    backgroundColor: 'rgba(49, 97, 252, 0.25)',
+                    borderColor: 'rgba(49, 97, 252, 1)',
+                    fill: true,
+                    datalabels: {
+                        display: true,
+                        align: 'top',
+                        color: '#fff',
+                        formatter: (value) => value
+                    }
                 }]
             },
+            plugins: [ChartDataLabels],
             options: {
                 responsive: true,
                 plugins: {
+                    datalabels: {
+                        display: true,
+                        align: 'top',
+                        color: '#fff',
+                        formatter: (value) => value
+                    },
                     legend: {
-                        display: false // Hiding the legend
+                        labels: {
+                            pointStyle: 'line',
+                            usePointStyle: true,
+                            color: '#FFFFFF'  // Legend text color
+                        }
                     }
                 },
                 scales: {
+                    x: {
+                        grid: {
+                            display: false  // Hide grid lines
+                        },
+                        ticks: {
+                            color: '#FFFFFF'  // X axis label color
+                        }
+                    },
                     y: {
-                        beginAtZero: true
+                        beginAtZero: true,
+                        grid: {
+                            display: false  // Hide grid lines
+                        },
+                        ticks: {
+                            color: '#FFFFFF'  // Y axis label color
+                        }
                     }
                 }
             }
