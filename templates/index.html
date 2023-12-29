@@ -47,7 +47,106 @@
             font-size: 1.5em;
         }
     </style>
+
+</head>
+
+<body style="display: flex; justify-content: center; align-items: center; margin: 0; overflow: hidden;">
+    <div style="
+    background-color: rgba(22, 25, 42, 1.0);
+    padding: 2em;
+    border-radius: 5px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 90%;
+	height: 90%;
+    max-width: 640px;
+    max-height: 480px;
+    margin: 0 auto;
+">
+        <div id="content-container"
+            style="display: flex; justify-content: center; align-items: center; height: 100vh; width: 100vw;">
+            <div
+                style="width: 640px; height: 480px; overflow: hidden; position: relative; background-size: 640px 480px;">
+                <!-- Create 3 areas, top right, top left, bottom -->
+                <div class="container-fluid">
+                    <div class="container-fluid">
+                        <!-- This is the new wrapping row for centering -->
+                        <div class="row justify-content-center">
+                            <div class="col-sm-5 mx-sm-1 d-flex justify-content-center flex-column align-items-center"
+                                style="margin-top:7%; border-radius: 5px; padding: 5px; background-color: rgba(31, 38, 60, 1.0);">
+                                <h1 class="small-header">Bitcoin</h1>
+                                <p><span class="price-text">$</span><span class="price-text" id="btc_price"></span>
+                                    <span class="price-change-text" id="btc_24hr_change"></span>
+                                </p>
+                                <canvas id="btc_gas_chart" width="50" height="25"></canvas>
+                            </div>
+
+                            <div class="col-sm-5 mx-sm-2 d-flex justify-content-center flex-column align-items-center"
+                                style="margin-top: 7%; border-radius: 5px; padding: 5px; background-color: rgba(31, 38, 60, 1.0);">
+                                <h1 class="small-header">Ethereum</h1>
+                                <p><span class="price-text">$</span><span class="price-text" id="eth_price"></span>
+                                    <span class="price-change-text" id="eth_24hr_change"></span>
+                                </p>
+                                <canvas id="eth_gas_chart" width="50" height="25"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="container-fluid">
+                        <div class="row justify-content-center">
+                            <div class="col-sm-5 mx-sm-1 d-flex justify-content-center flex-column align-items-center"
+                                style="margin-top:2%; border-radius: 5px; padding: 5px; background-color: rgba(31, 38, 60, 1.0);">
+                                <h1 class="small-header">BTC.D</h1>
+                                <p><span class="price-text" id="btc_dominance"></span><span class="price-text">%</p>
+                                <div class="slider-container">
+                                    <input type="range" min="0" max="100" value="0" class="slider"
+                                        id="btc_dominance_range">
+                                    <span class="slider-value" id="btc_dominance_slider_value">0</span>
+                                </div>
+                            </div>
+
+                            <div class="col-sm-5 mx-sm-2 d-flex justify-content-center flex-column align-items-center"
+                                style="margin-top: 2%; border-radius: 5px; padding: 5px; background-color: rgba(31, 38, 60, 1.0);">
+                                <h1 class="small-header">Fear &amp; Greed</h1>
+                                <p><span class="price-text" id="fear_greed"></span></p>
+                                <div class="slider-container">
+                                    <input type="range" min="0" max="100" value="0" class="slider"
+                                        id="fear_and_greed_range">
+                                    <span class="slider-value" id="fear_and_greed_slider_value">0</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="slider_container">
+
+        <!-- define your gradient values here -->
+        <svg width="0" height="0">
+            <defs>
+                <linearGradient id="gradient1">
+                    <stop offset="0%" stop-color="#cc0000" />
+                    <stop offset="25%" stop-color="#ff6600" />
+                    <stop offset="50%" stop-color="orange" />
+                    <stop offset="75%" stop-color="#FFFf00" />
+                    <stop offset="100%" stop-color="#66cc33" />
+                </linearGradient>
+            </defs>
+        </svg>
+
+        <div id="slider"></div>
+
+        <div class="slider_label">
+            <div class="minl">LOW</div>
+            <div class="maxl">HIGH</div>
+        </div>
+
+    </div>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+
     <script>
         let apiValues_btc = [0, 0, 0, 0, 0, 0];  // Placeholder data
         let apiValues_eth = [0, 0, 0, 0, 0, 0];  // Placeholder data
@@ -158,6 +257,9 @@
             $.getJSON('/fear_greed', function (data) {
                 // Extracting the value from the latest index data
                 $('#fear_greed').text(data.data[0].value);
+                $('#fear_and_greed_slider_value').text(data.data[0].value);
+                $('#fear_and_greed_range').val(data.data[0].value);
+                setupSlider("btc_dominance_range", "fear_and_greed_slider_value");
 
                 let value = parseInt(document.getElementById('fear_greed').innerText);  // Get the current value
                 document.getElementById('fear_greed').style.color = getColorForValue(value);  // Set the color based on the value
@@ -177,62 +279,29 @@
             updateFearGreedData(); // initial call for Fear and Greed data
         });
     </script>
-</head>
 
-<body style="display: flex; justify-content: center; align-items: center; margin: 0; overflow: hidden;">
-    <div style="
-    background-color: rgba(22, 25, 42, 1.0);
-    padding: 2em;
-    border-radius: 5px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    width: 90%;
-	height: 90%;
-    max-width: 640px;
-    max-height: 480px;
-    margin: 0 auto;
-">
-        <div id="content-container"
-            style="display: flex; justify-content: center; align-items: center; height: 100vh; width: 100vw;">
-            <div
-                style="width: 640px; height: 480px; overflow: hidden; position: relative; background-size: 640px 480px;">
-                <!-- Create 3 areas, top right, top left, bottom -->
-                <div class="container-fluid">
-                    <div class="container-fluid">
-                        <!-- This is the new wrapping row for centering -->
-                        <div class="row justify-content-center">
-                            <div class="col-sm-5 mx-sm-1 d-flex justify-content-center flex-column align-items-center"
-                                style="margin-top:7%; border-radius: 5px; padding: 5px; background-color: rgba(31, 38, 60, 1.0);">
-                                <h1 class="small-header">Bitcoin</h1>
-                                <p><span class="price-text">$</span><span class="price-text" id="btc_price"></span>
-                                    <span class="price-change-text" id="btc_24hr_change"></span>
-                                </p>
-                                <canvas id="btc_gas_chart" width="50" height="25"></canvas>
-                            </div>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            function setupSlider(sliderId, valueId) {
+                const slider = document.getElementById(sliderId);
+                const sliderValue = document.getElementById(valueId);
 
-                            <div class="col-sm-5 mx-sm-2 d-flex justify-content-center flex-column align-items-center"
-                                style="margin-top: 7%; border-radius: 5px; padding: 5px; background-color: rgba(31, 38, 60, 1.0);">
-                                <h1 class="small-header">Ethereum</h1>
-                                <p><span class="price-text">$</span><span class="price-text" id="eth_price"></span>
-                                    <span class="price-change-text" id="eth_24hr_change"></span>
-                                </p>
-                                <canvas id="eth_gas_chart" width="50" height="25"></canvas>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-sm-6 offset-sm-3 d-flex justify-content-center flex-column justify-content-center align-items-center"
-                            style="margin-top: 2%; border-radius: 5px; padding: 5px; width: 80%; height: 145px; background-color: rgba(31, 38, 60, 1.0);">
-                            <h1 class="small-header">Fear &amp; Greed</h1>
-                            <p><span class="price-change-text id="fear_greed"></span></p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+                function updateSliderValue() {
+                    sliderValue.textContent = slider.value;
+                    const offset = (slider.value - slider.min) / (slider.max - slider.min) * 100;
+                    sliderValue.style.left = `calc(${offset}% - 5px)`;
+                }
+
+                slider.addEventListener("input", updateSliderValue);
+
+                // Call the function to set the initial position of the thumb
+                updateSliderValue();
+            }
+
+            setupSlider("btc_dominance_range", "btc_dominance_slider_value");
+            setupSlider("fear_and_greed_range", "fear_and_greed_slider_value");
+        });
+    </script>
 
     <script>
         function getColorForValue(value) {
