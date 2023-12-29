@@ -8,6 +8,8 @@
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@3"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/raphael/2.3.0/raphael.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/justgage@1.4.1/justgage.js"></script>
     <style>
         body {
             width: 640px;
@@ -40,6 +42,35 @@
 
         .price-change-text {
             font-size: 0.75em;
+        }
+
+        /* Custom CSS for JustGage */
+        #btc_dominance_gauge svg text:first-of-type {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji" !important;
+            font-size: 28px !important;
+            font-weight: 400 !important;
+            fill: #FFFFFF;
+            /* White color for text elements */
+        }
+
+        /* Target the third and last text elements inside the JustGage SVG, typically min and max labels */
+        #btc_dominance_gauge svg text:nth-of-type(3),
+        #btc_dominance_gauge svg text:last-of-type {
+            display: none;
+        }
+
+        #fear_greed_gauge svg text:first-of-type {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji" !important;
+            font-size: 28px !important;
+            font-weight: 400 !important;
+            fill: #FFFFFF;
+            /* White color for text elements */
+        }
+
+        /* Target the third and last text elements inside the JustGage SVG, typically min and max labels */
+        #fear_greed_gauge svg text:nth-of-type(3),
+        #fear_greed_gauge svg text:last-of-type {
+            display: none;
         }
 
         p {
@@ -98,22 +129,19 @@
                             <div class="col-sm-5 mx-sm-1 d-flex justify-content-center flex-column align-items-center"
                                 style="margin-top:2%; border-radius: 5px; padding: 5px; background-color: rgba(31, 38, 60, 1.0);">
                                 <h1 class="small-header">BTC.D</h1>
-                                <p><span class="price-text" id="btc_dominance"></span><span class="price-text">%</p>
+
                                 <div class="slider-container">
-                                    <input type="range" min="0" max="100" value="0" class="slider"
-                                        id="btc_dominance_range">
-                                    <span class="slider-value" id="btc_dominance_slider_value">0</span>
+                                    <div class="gauge-container" id="btc_dominance_gauge"
+                                        style="width:200px; height:100px;"></div>
                                 </div>
                             </div>
 
                             <div class="col-sm-5 mx-sm-2 d-flex justify-content-center flex-column align-items-center"
                                 style="margin-top: 2%; border-radius: 5px; padding: 5px; background-color: rgba(31, 38, 60, 1.0);">
                                 <h1 class="small-header">Fear &amp; Greed</h1>
-                                <p><span class="price-text" id="fear_greed"></span></p>
                                 <div class="slider-container">
-                                    <input type="range" min="0" max="100" value="0" class="slider"
-                                        id="fear_and_greed_range">
-                                    <span class="slider-value" id="fear_and_greed_slider_value">0</span>
+                                    <div class="gauge-container" id="fear_greed_gauge"
+                                        style="width:200px; height:100px;"></div>
                                 </div>
                             </div>
                         </div>
@@ -122,34 +150,14 @@
             </div>
         </div>
     </div>
-    <div class="slider_container">
 
-        <!-- define your gradient values here -->
-        <svg width="0" height="0">
-            <defs>
-                <linearGradient id="gradient1">
-                    <stop offset="0%" stop-color="#cc0000" />
-                    <stop offset="25%" stop-color="#ff6600" />
-                    <stop offset="50%" stop-color="orange" />
-                    <stop offset="75%" stop-color="#FFFf00" />
-                    <stop offset="100%" stop-color="#66cc33" />
-                </linearGradient>
-            </defs>
-        </svg>
-
-        <div id="slider"></div>
-
-        <div class="slider_label">
-            <div class="minl">LOW</div>
-            <div class="maxl">HIGH</div>
-        </div>
-
-    </div>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
 
     <script>
         let apiValues_btc = [0, 0, 0, 0, 0, 0];  // Placeholder data
         let apiValues_eth = [0, 0, 0, 0, 0, 0];  // Placeholder data
+        var btcDominanceGauge;
+        var fearAndGreedGauge;
 
         function formatNumberWithCommas(x) {
             return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
@@ -245,10 +253,13 @@
         function updateBitcoinDominanceData() {
             $.getJSON('/btc_dominance', function (data) {
                 // Extracting the value from the latest index data
-                $('#btc_dominance').text(data.data[0].value.toFixed(2));
-                $('#btc_dominance_slider_value').text(data.data[0].value.toFixed(2));
-                $('#btc_dominance_range').val(data.data[0].value.toFixed(2));
-                setupSlider("btc_dominance_range", "btc_dominance_slider_value");
+                var newDominanceValue = parseFloat(data.data[0].value);
+
+                $('#btc_dominance').text(newDominanceValue);
+
+                if (btcDominanceGauge) {
+                    btcDominanceGauge.refresh(newDominanceValue);
+                }
 
                 setTimeout(updateBitcoinDominanceData, 18000000); // repeat every three hours
             });
@@ -256,10 +267,13 @@
         function updateFearGreedData() {
             $.getJSON('/fear_greed', function (data) {
                 // Extracting the value from the latest index data
-                $('#fear_greed').text(data.data[0].value);
-                $('#fear_and_greed_slider_value').text(data.data[0].value);
-                $('#fear_and_greed_range').val(data.data[0].value);
-                setupSlider("btc_dominance_range", "fear_and_greed_slider_value");
+                var newFearGreedValue = data.data[0].value;
+
+                $('#fear_greed').text(newFearGreedValue);
+                if (fearAndGreedGauge) {
+                    fearAndGreedGauge.refresh(newFearGreedValue);
+                    updateGaugeColor();  // Update the color
+                }
 
                 let value = parseInt(document.getElementById('fear_greed').innerText);  // Get the current value
                 document.getElementById('fear_greed').style.color = getColorForValue(value);  // Set the color based on the value
@@ -282,24 +296,33 @@
 
     <script>
         document.addEventListener("DOMContentLoaded", function () {
-            function setupSlider(sliderId, valueId) {
-                const slider = document.getElementById(sliderId);
-                const sliderValue = document.getElementById(valueId);
-
-                function updateSliderValue() {
-                    sliderValue.textContent = slider.value;
-                    const offset = (slider.value - slider.min) / (slider.max - slider.min) * 100;
-                    sliderValue.style.left = `calc(${offset}% - 5px)`;
+            btcDominanceGauge = new JustGage({
+                id: "btc_dominance_gauge",
+                value: 0,
+                min: 0,
+                max: 100,
+                title: "BTC Dominance",
+                relativeGaugeSize: true,
+                decimals: 2,       // Specify the number of decimals
+                formatNumber: true, // Ensure numbers are formatted
+                // Define a single level color
+                levelColors: ['#3161FC'],
+                // Use textRenderer to format the value with a "%" sign
+                textRenderer: function (value) {
+                    return value.toFixed(1) + "%";
                 }
+            });
 
-                slider.addEventListener("input", updateSliderValue);
-
-                // Call the function to set the initial position of the thumb
-                updateSliderValue();
-            }
-
-            setupSlider("btc_dominance_range", "btc_dominance_slider_value");
-            setupSlider("fear_and_greed_range", "fear_and_greed_slider_value");
+            fearAndGreedGauge = new JustGage({
+                id: "fear_greed_gauge",
+                value: 0,
+                min: 0,
+                max: 100,
+                title: "Fear & Greed",
+                relativeGaugeSize: true,
+                // Define a single level color
+                levelColors: ['#3161FC'],
+            });
         });
     </script>
 
@@ -321,8 +344,14 @@
             return 'rgb(' + red + ',' + green + ',' + blue + ')';
         }
 
-        let value = parseInt(document.getElementById('fear_greed').innerText);  // Get the current value
-        document.getElementById('fear_greed').style.color = getColorForValue(value);  // Set the color based on the value
+        function updateGaugeColor() {
+        // Assuming the gauge's value text is the second <text> element in the SVG
+        let valueTextElement = document.querySelector('#fear_greed_gauge svg text:first-of-type');
+        if (valueTextElement) {
+            let value = parseFloat(valueTextElement.textContent);  // Get the current value from the gauge
+            valueTextElement.style.fill = getColorForValue(value);  // Set the color based on the value
+        }
+    }
     </script>
 
     <!-- Global script defining the time labels -->
