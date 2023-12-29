@@ -278,10 +278,24 @@
                 let value = parseInt(document.getElementById('fear_greed').innerText);  // Get the current value
                 document.getElementById('fear_greed').style.color = getColorForValue(value);  // Set the color based on the value
 
-                setTimeout(updateFearGreedData, 18000000); // repeat every three hours
+                // Schedule the next update
+                scheduleNextUpdate();
             }).fail(function () {
-                setTimeout(updateFearGreedData, 18000000); // even on failure, repeat after three hours
+                // even on failure, try to reschedule the next update
+                scheduleNextUpdate();
             });
+        }
+
+        function scheduleNextUpdate() {
+            // Calculate the time now
+            var now = new Date();
+            // Calculate the next midnight UTC
+            var nextMidnightUtc = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1));
+            // Calculate the delay until the next midnight UTC
+            var delay = nextMidnightUtc - now;
+
+            // Schedule the next update for just after the next midnight UTC
+            setTimeout(updateFearGreedData, delay + 1000 * 60); // 1 minute after midnight UTC
         }
 
         $(document).ready(function () {
@@ -345,13 +359,13 @@
         }
 
         function updateGaugeColor() {
-        // Assuming the gauge's value text is the second <text> element in the SVG
-        let valueTextElement = document.querySelector('#fear_greed_gauge svg text:first-of-type');
-        if (valueTextElement) {
-            let value = parseFloat(valueTextElement.textContent);  // Get the current value from the gauge
-            valueTextElement.style.fill = getColorForValue(value);  // Set the color based on the value
+            // Assuming the gauge's value text is the second <text> element in the SVG
+            let valueTextElement = document.querySelector('#fear_greed_gauge svg text:first-of-type');
+            if (valueTextElement) {
+                let value = parseFloat(valueTextElement.textContent);  // Get the current value from the gauge
+                valueTextElement.style.fill = getColorForValue(value);  // Set the color based on the value
+            }
         }
-    }
     </script>
 
     <!-- Global script defining the time labels -->
