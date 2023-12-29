@@ -143,6 +143,17 @@
                 setTimeout(updateEthereumGasData, 600000); // even on failure, repeat after 10 minutes
             });
         }
+        function updateBitcoinDominanceData() {
+            $.getJSON('/btc_dominance', function (data) {
+                // Extracting the value from the latest index data
+                $('#btc_dominance').text(data.data[0].value.toFixed(2));
+                $('#btc_dominance_slider_value').text(data.data[0].value.toFixed(2));
+                $('#btc_dominance_range').val(data.data[0].value.toFixed(2));
+                setupSlider("btc_dominance_range", "btc_dominance_slider_value");
+
+                setTimeout(updateBitcoinDominanceData, 18000000); // repeat every three hours
+            });
+        }
         function updateFearGreedData() {
             $.getJSON('/fear_greed', function (data) {
                 // Extracting the value from the latest index data
@@ -162,6 +173,7 @@
             updateBitcoinGasData(); // initial call for Bitcoin gas data
             updateEthereumData(); // initial call for Ethereum price data
             updateEthereumGasData(); // initial call for Ethereum gas data
+            updateBitcoinDominanceData(); // initial call for Bitcoin dominance data
             updateFearGreedData(); // initial call for Fear and Greed data
         });
     </script>
