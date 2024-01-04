@@ -20,6 +20,8 @@
             background-image: url('static/background.jpg');
             background-repeat: no-repeat;
             background-size: 640px 480px;
+            position: relative;
+            /* Establishes a positioning context */
         }
 
         .small-header {
@@ -71,6 +73,31 @@
         #fear_greed_gauge svg text:nth-of-type(3),
         #fear_greed_gauge svg text:last-of-type {
             display: none;
+        }
+
+        .overlay-text {
+            position: absolute;
+            /* Positioned relative to the nearest positioned ancestor */
+            top: 41%;
+            /* Center horizontally */
+            transform: translate(-50%, -50%);
+            /* Adjust for exact centering */
+            z-index: 9999;
+            /* Sit on top */
+            padding: 10px;
+            /* Some padding around the text */
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji" !important;
+            font-size: 20px;
+            font-weight: 400;
+            color: white;
+            display: flex;
+            /* Makes this a flex container */
+            justify-content: center;
+            /* Centers children horizontally in the container */
+            align-items: center;
+            /* Centers children vertically in the container */
+            width: 100%;
+            /* Full width of the container */
         }
 
         p {
@@ -149,6 +176,9 @@
                 </div>
             </div>
         </div>
+        <span id="btc_gas" class="overlay-text" style="left: 29%;">0 sats/vB</span>
+
+        <span id="eth_gas" class="overlay-text" style="left: 70.5%;">0 gwei</span>
     </div>
 
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
@@ -191,7 +221,7 @@
         function updateBitcoinGasData() {
             $.getJSON('/bitcoin_gas', function (data) {
                 var roundedFee = Math.round(data[0].medianFee);
-                $('#btc_gas').text(roundedFee);
+                $('#btc_gas').text(roundedFee + ' sats/vB');
 
                 // Update the apiValues_btc array
                 apiValues_btc.push(roundedFee);
@@ -234,7 +264,7 @@
         }
         function updateEthereumGasData() {
             $.getJSON('/ethereum_gas', function (data) {
-                $('#eth_gas').text(data.result.ProposeGasPrice);
+                $('#eth_gas').text(data.result.ProposeGasPrice + ' gwei');
 
                 // Update the apiValues_eth array
                 apiValues_eth.push(data.result.ProposeGasPrice);
@@ -415,7 +445,8 @@
                         formatter: (value) => value
                     },
                     legend: {
-                        labels: {
+                        display: false,
+                        labels: { // Currently not used
                             pointStyle: 'line',
                             usePointStyle: true,
                             color: '#FFFFFF'  // Legend text color
@@ -479,7 +510,8 @@
                         formatter: (value) => value
                     },
                     legend: {
-                        labels: {
+                        display: false,
+                        labels: { // Currently not used
                             pointStyle: 'line',
                             usePointStyle: true,
                             color: '#FFFFFF'  // Legend text color
