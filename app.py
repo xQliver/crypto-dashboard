@@ -6,7 +6,9 @@ app = Flask(__name__)
 BITCOIN_API_URL = "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd&include_market_cap=false&include_24hr_vol=false&include_24hr_change=true&include_last_updated_at=false"
 BITCOIN_GAS_API_URL = "https://mempool.space/api/v1/fees/mempool-blocks"
 ETHEREUM_API_URL = "https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd&include_market_cap=false&include_24hr_vol=false&include_24hr_change=true&include_last_updated_at=false"
-ETHEREUM_GAS_API_URL = "https://api.etherscan.io/api?module=gastracker&action=gasoracle&apikey=761AJ5NJ93VZPZ96PFD3QBWBMJMEAZ5SB5"
+ETHEREUM_GAS_API_URL = (
+    "https://api.etherscan.io/api?module=gastracker&action=gasoracle&apikey=YourAPIKey"
+)
 BITCOIN_DOMINANCE_API_URL = "https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=125&page=1&sparkline=false"
 FEAR_GREED_API_URL = "https://api.alternative.me/fng/"
 
